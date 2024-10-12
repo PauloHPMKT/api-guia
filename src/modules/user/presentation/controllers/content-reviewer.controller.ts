@@ -1,22 +1,35 @@
-import { Body, Controller, Inject, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  HttpException,
+  HttpStatus,
+  Inject,
+  Post,
+} from '@nestjs/common';
 import { CreateChatReviewUsecase } from '../../application/usecases/CreateChatReview.usecase';
+import { CreateReviewDto } from '../dto/create-review.dto';
 
 @Controller('content-reviewer')
 export class ReviewerController {
   constructor(
     @Inject('CreateChatContentReviewUsecase')
-    private readonly CreateChatContentReviewUsecase: CreateChatReviewUsecase,
+    private readonly createChatReviewUsecase: CreateChatReviewUsecase,
   ) {}
+
   @Post('v1/chat/completions')
-  async handle(@Body() { content, intention }: any): Promise<string> {
+  async handle(@Body() createReview: CreateReviewDto): Promise<string> {
     try {
-      const result = await this.CreateChatContentReviewUsecase.execute({
+      const { content, intention } = createReview;
+      const result = await this.createChatReviewUsecase.execute({
         content,
         intention,
       });
       return result;
     } catch (error) {
-      return error;
+      throw new HttpException(
+        'Erro ao processar a solicitação',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 }
